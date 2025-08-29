@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Player - Web Development Course</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Left Sidebar - Lecture List -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Web Development Course</h2>
+                
+                <!-- Folder Selection Section -->
+                <div class="folder-selection">
+                    <button class="btn btn--primary btn--full-width" id="selectFolderBtn">
+                        📁 Select Lecture Folder
+                    </button>
+                    
+                    <!-- Fallback file input for browsers without File System Access API -->
+                    <input type="file" id="folderInput" webkitdirectory directory multiple style="display: none;" accept="video/*">
+                    
+                    <!-- Folder Info Display -->
+                    <div class="folder-info hidden" id="folderInfo">
+                        <div class="folder-path">
+                            <span class="folder-path-label">Folder:</span>
+                            <span class="folder-path-text" id="folderPathText">No folder selected</span>
+                        </div>
+                        <div class="folder-stats">
+                            <span class="video-count" id="videoCount">0 videos found</span>
+                            <button class="btn btn--outline btn--sm" id="refreshFolderBtn">🔄 Refresh</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading indicator for folder scanning -->
+                    <div class="folder-loading hidden" id="folderLoading">
+                        <div class="loading-spinner-small"></div>
+                        <span>Scanning folder for videos...</span>
+                    </div>
+                    
+                    <!-- Error message display -->
+                    <div class="folder-error hidden" id="folderError">
+                        <span class="error-text" id="folderErrorText">Error message here</span>
+                    </div>
+                </div>
+                
+                <div class="overall-progress">
+                    <div class="progress-info">
+                        <span class="progress-text">Overall Progress</span>
+                        <span class="progress-percentage">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="overallProgress"></div>
+                    </div>
+                    <div class="time-info">
+                        <span class="completed-time">0h 0m completed</span>
+                        <span class="remaining-time">7h 16m remaining</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lecture-list" id="lectureList">
+                <!-- Lectures will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-header">
+                    <h1 id="currentLectureTitle">Select a lecture to start watching</h1>
+                    <div class="lecture-navigation">
+                        <button class="btn btn--outline" id="prevLecture" disabled>
+                            ← Previous
+                        </button>
+                        <button class="btn btn--outline" id="nextLecture" disabled>
+                            Next →
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="video-container" id="videoContainer">
+                    <video id="videoPlayer" preload="metadata">
+                        <source src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    
+                    <!-- Custom Video Controls -->
+                    <div class="video-controls" id="videoControls">
+                        <div class="progress-container">
+                            <div class="progress-timeline">
+                                <div class="progress-bar-video">
+                                    <div class="progress-fill-video" id="progressFill"></div>
+                                    <div class="progress-handle" id="progressHandle"></div>
+                                </div>
+                            </div>
+                            <div class="time-display">
+                                <span id="currentTime">0:00</span>
+                                <span id="totalTime">0:00</span>
+                            </div>
+                        </div>
+                        
+                        <div class="controls-row">
+                            <div class="left-controls">
+                                <button class="control-btn" id="playPauseBtn">
+                                    <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                    <svg class="pause-icon hidden" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                                    </svg>
+                                </button>
+                                
+                                <div class="volume-control">
+                                    <button class="control-btn" id="volumeBtn">
+                                        <svg class="volume-icon" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                                        </svg>
+                                    </button>
+                                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100">
+                                </div>
+                            </div>
+                            
+                            <div class="right-controls">
+                                <div class="speed-control">
+                                    <select class="speed-selector form-control" id="speedSelector">
+                                        <option value="0.5">0.5x</option>
+                                        <option value="0.75">0.75x</option>
+                                        <option value="1" selected>1x</option>
+                                        <option value="1.25">1.25x</option>
+                                        <option value="1.5">1.5x</option>
+                                        <option value="2">2x</option>
+                                    </select>
+                                </div>
+                                
+                                <button class="control-btn" id="fullscreenBtn">
+                                    <svg class="fullscreen-icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                                    </svg>
+                                    <svg class="exit-fullscreen-icon hidden" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading Overlay -->
+                    <div class="loading-overlay" id="loadingOverlay">
+                        <div class="loading-spinner"></div>
+                        <p>Loading video...</p>
+                    </div>
+                    
+                    <!-- No Video Selected Message -->
+                    <div class="no-video-message" id="noVideoMessage">
+                        <div class="message-content">
+                            <h3>Welcome to Your Lecture Player</h3>
+                            <p>Select your lecture folder or choose a sample lecture to start watching</p>
+                            <div class="features-list">
+                                <div class="feature">✓ Auto-resume from where you left off</div>
+                                <div class="feature">✓ Variable playback speeds</div>
+                                <div class="feature">✓ Fullscreen support</div>
+                                <div class="feature">✓ Progress tracking</div>
+                            </div>
+                            <div class="getting-started">
+                                <p>👆 Click "Select Lecture Folder" to load your own videos</p>
+                                <p>📁 Supports: MP4, MOV, AVI, MKV, WEBM files</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
